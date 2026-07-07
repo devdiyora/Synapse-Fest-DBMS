@@ -18,15 +18,6 @@ Tech Stack
 * SQL
 * pgAdmin
 
-Repository Structure
-
-* `ER_drawio.pdf` – ER diagram (conceptual schema design)
-* `ERD-Relational_mapping.txt` – ER-to-relational mapping and pre-normalized schema
-* `Normalization.txt` – Functional dependencies and 1NF/2NF/3NF/BCNF normalization
-* `create_tables.txt` – PostgreSQL DDL for all tables
-* `triggers.txt` – PL/pgSQL triggers for business rules
-* `Queries.txt` – Sample SQL queries and reports
-* `SRS.txt` – Software requirements specification
 
 Sample Queries
 
