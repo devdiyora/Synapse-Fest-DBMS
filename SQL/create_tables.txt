@@ -1,0 +1,636 @@
+-- ================================================================
+-- SYNAPSE FEST DATABASE -- SCHEMA (PostgreSQL)
+-- ================================================================
+-- This file creates all tables for the Synapse Fest Database, in an
+-- order that respects foreign-key dependencies. See
+-- ERD-Relational_mapping.txt and Normalization.txt for design
+-- ================================================================
+
+
+-- ----------------------------------------------------------------
+-- COMMITTEE
+-- ----------------------------------------------------------------
+CREATE TABLE committee (
+    comm_id SERIAL PRIMARY KEY,
+    comm_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE committee_phone (
+    comm_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (comm_id, phone),
+
+    FOREIGN KEY (comm_id)
+        REFERENCES committee(comm_id)
+        ON DELETE CASCADE
+);
+
+
+-- ----------------------------------------------------------------
+-- VENUE + FACILITIES
+-- ----------------------------------------------------------------
+CREATE TABLE venue (
+    venue_id SERIAL PRIMARY KEY,
+    venue_name VARCHAR(150) NOT NULL,
+    capacity INT NOT NULL CHECK (capacity > 0),
+    location VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE facility (
+    facility_id SERIAL PRIMARY KEY,
+    facility_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE venue_facility (
+    venue_id INT NOT NULL,
+    facility_id INT NOT NULL,
+
+    PRIMARY KEY (venue_id, facility_id),
+
+    FOREIGN KEY (venue_id)
+        REFERENCES venue(venue_id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (facility_id)
+        REFERENCES facility(facility_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- COMMITTEE MEMBERS
+-- ----------------------------------------------------------------
+CREATE TABLE committee_member (
+    member_id SERIAL PRIMARY KEY,
+
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    email VARCHAR(255) UNIQUE NOT NULL,
+
+    position VARCHAR(100) NOT NULL,
+
+    year_experience INT NOT NULL
+        CHECK (year_experience >= 0)
+);
+
+CREATE TABLE committee_member_phone (
+    member_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (member_id, phone),
+
+    FOREIGN KEY (member_id)
+        REFERENCES committee_member(member_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE committee_committee_member (
+    comm_id INT NOT NULL,
+    member_id INT NOT NULL,
+
+    PRIMARY KEY (comm_id, member_id),
+
+    FOREIGN KEY (comm_id)
+        REFERENCES committee(comm_id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (member_id)
+        REFERENCES committee_member(member_id)
+        ON DELETE CASCADE
+);
+
+
+-- ----------------------------------------------------------------
+-- VOLUNTEERS
+-- ----------------------------------------------------------------
+CREATE TABLE volunteer (
+    volunteer_id SERIAL PRIMARY KEY,
+
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    email VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE volunteer_phone (
+    volunteer_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (volunteer_id, phone),
+
+    FOREIGN KEY (volunteer_id)
+        REFERENCES volunteer(volunteer_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE committee_volunteer (
+    comm_id INT NOT NULL,
+    volunteer_id INT NOT NULL,
+
+    PRIMARY KEY (comm_id, volunteer_id),
+
+    FOREIGN KEY (comm_id)
+        REFERENCES committee(comm_id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (volunteer_id)
+        REFERENCES volunteer(volunteer_id)
+        ON DELETE CASCADE
+);
+
+
+-- ----------------------------------------------------------------
+-- FINANCE: BUDGET + SPONSORS
+-- ----------------------------------------------------------------
+CREATE TABLE budget (
+    budget_id SERIAL PRIMARY KEY,
+
+    comm_id INT NOT NULL UNIQUE,
+
+    amount NUMERIC(12,2) NOT NULL
+        CHECK (amount >= 0),
+
+    status VARCHAR(20) NOT NULL
+        CHECK (status IN ('PENDING', 'APPROVED')),
+
+    FOREIGN KEY (comm_id)
+        REFERENCES committee(comm_id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE sponsor (
+    sponsor_id SERIAL PRIMARY KEY,
+
+    sponsor_name VARCHAR(150) NOT NULL,
+
+    email VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE sponsor_phone (
+    sponsor_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (sponsor_id, phone),
+
+    FOREIGN KEY (sponsor_id)
+        REFERENCES sponsor(sponsor_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE committee_sponsor (
+    comm_id INT NOT NULL,
+    sponsor_id INT NOT NULL,
+
+    amount NUMERIC(12,2) NOT NULL
+        CHECK (amount > 0),
+
+    status VARCHAR(20) NOT NULL
+        CHECK (status IN ('PENDING', 'APPROVED')),
+
+    PRIMARY KEY (comm_id, sponsor_id),
+
+    FOREIGN KEY (comm_id)
+        REFERENCES committee(comm_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (sponsor_id)
+        REFERENCES sponsor(sponsor_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- EVENTS
+-- ----------------------------------------------------------------
+CREATE TABLE event (
+    event_id SERIAL PRIMARY KEY,
+
+    event_name VARCHAR(150) NOT NULL UNIQUE,
+
+    category VARCHAR(50) NOT NULL
+        CHECK (
+            category IN (
+                'CODING',
+                'STREET_PLAY',
+                'STANDUP',
+                'DJ',
+                'DANCE',
+                'MUSIC',
+                'TALENT'
+            )
+        ),
+
+    rules TEXT,
+
+    prize_money NUMERIC(12,2) NOT NULL
+        CHECK (prize_money >= 0),
+
+    date DATE NOT NULL,
+
+    start_time TIME NOT NULL,
+
+    end_time TIME NOT NULL,
+
+    cost_event NUMERIC(12,2) NOT NULL
+        CHECK (cost_event >= 0),
+
+    venue_id INT NOT NULL,
+
+    comm_id INT NOT NULL,
+
+    CHECK (start_time < end_time),
+
+    FOREIGN KEY (venue_id)
+        REFERENCES venue(venue_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (comm_id)
+        REFERENCES committee(comm_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- JUDGES (fee lives on the event-judge bridge, not on the judge)
+-- ----------------------------------------------------------------
+CREATE TABLE judges (
+    judge_id SERIAL PRIMARY KEY,
+
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    email VARCHAR(255) UNIQUE NOT NULL,
+
+    genre VARCHAR(50) NOT NULL
+        CHECK (
+            genre IN (
+                'CODING',
+                'STREET_PLAY',
+                'STANDUP',
+                'DJ',
+                'DANCE',
+                'MUSIC',
+                'TALENT'
+            )
+        )
+);
+
+CREATE TABLE judges_phone (
+    judge_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (judge_id, phone),
+
+    FOREIGN KEY (judge_id)
+        REFERENCES judges(judge_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE event_judges (
+    event_id INT NOT NULL,
+    judge_id INT NOT NULL,
+
+    fee NUMERIC(12,2) NOT NULL
+        CHECK (fee >= 0),
+
+    PRIMARY KEY (event_id, judge_id),
+
+    FOREIGN KEY (event_id)
+        REFERENCES event(event_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (judge_id)
+        REFERENCES judges(judge_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- ARTISTS (fee lives on the event-artist bridge, not on the artist)
+-- ----------------------------------------------------------------
+CREATE TABLE artist (
+    artist_id SERIAL PRIMARY KEY,
+
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    email VARCHAR(255) UNIQUE NOT NULL,
+
+    genre VARCHAR(50) NOT NULL
+        CHECK (
+            genre IN (
+                'CODING',
+                'STREET_PLAY',
+                'STANDUP',
+                'DJ',
+                'DANCE',
+                'MUSIC',
+                'TALENT'
+            )
+        )
+);
+
+CREATE TABLE artist_phone (
+    artist_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (artist_id, phone),
+
+    FOREIGN KEY (artist_id)
+        REFERENCES artist(artist_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE event_artist (
+    event_id INT NOT NULL,
+    artist_id INT NOT NULL,
+
+    fee NUMERIC(12,2) NOT NULL
+        CHECK (fee >= 0),
+
+    PRIMARY KEY (event_id, artist_id),
+
+    FOREIGN KEY (event_id)
+        REFERENCES event(event_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (artist_id)
+        REFERENCES artist(artist_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- ATTENDEES
+-- ----------------------------------------------------------------
+CREATE TABLE attendee (
+    attendee_id SERIAL PRIMARY KEY,
+
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    gender VARCHAR(10) NOT NULL
+        CHECK (
+            gender IN (
+                'MALE',
+                'FEMALE',
+                'OTHER'
+            )
+        ),
+
+    category VARCHAR(30) NOT NULL
+        CHECK (
+            category IN (
+                'STUDENT',
+                'PROFESSOR',
+                'WORKING_PROFESSIONAL',
+                'OUTSIDER'
+            )
+        ),
+
+    email VARCHAR(255) UNIQUE NOT NULL,
+
+    dob DATE NOT NULL
+);
+
+CREATE TABLE attendee_phone (
+    attendee_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (attendee_id, phone),
+
+    FOREIGN KEY (attendee_id)
+        REFERENCES attendee(attendee_id)
+        ON DELETE CASCADE
+);
+
+
+-- ----------------------------------------------------------------
+-- TICKETING
+-- ----------------------------------------------------------------
+CREATE TABLE ticket_type (
+    ticket_type_id SERIAL PRIMARY KEY,
+
+    ticket_type_name VARCHAR(100) NOT NULL,
+
+    price NUMERIC(12,2) NOT NULL
+        CHECK (price >= 0)
+);
+
+CREATE TABLE ticket_type_event (
+    ticket_type_id INT NOT NULL,
+    event_id INT NOT NULL,
+
+    PRIMARY KEY (ticket_type_id, event_id),
+
+    FOREIGN KEY (ticket_type_id)
+        REFERENCES ticket_type(ticket_type_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (event_id)
+        REFERENCES event(event_id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE ticket (
+    ticket_id SERIAL PRIMARY KEY,
+
+    purchase_time TIMESTAMP NOT NULL
+        DEFAULT CURRENT_TIMESTAMP,
+
+    status VARCHAR(10) NOT NULL
+        CHECK (
+            status IN (
+                'ACTIVE',
+                'USED'
+            )
+        ),
+
+    attendee_id INT NOT NULL,
+
+    ticket_type_id INT NOT NULL,
+
+    FOREIGN KEY (attendee_id)
+        REFERENCES attendee(attendee_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (ticket_type_id)
+        REFERENCES ticket_type(ticket_type_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- ACCOMMODATION
+-- ----------------------------------------------------------------
+CREATE TABLE hostel_room (
+    room_id VARCHAR(20) PRIMARY KEY,
+
+    hostel_name VARCHAR(100) NOT NULL,
+
+    capacity INT NOT NULL
+        CHECK (capacity > 0),
+
+    rate_per_night NUMERIC(12,2) NOT NULL
+        CHECK (rate_per_night >= 0)
+);
+
+CREATE TABLE accommodation (
+    attendee_id INT NOT NULL,
+
+    room_id VARCHAR(20) NOT NULL,
+
+    check_in_date_time TIMESTAMP NOT NULL,
+
+    check_out_date TIMESTAMP NOT NULL,
+
+    amount NUMERIC(12,2) NOT NULL
+        CHECK (amount >= 0),
+
+    status VARCHAR(20) NOT NULL
+        CHECK (
+            status IN (
+                'ACTIVE',
+                'COMPLETED'
+            )
+        ),
+
+    PRIMARY KEY (
+        attendee_id,
+        room_id,
+        check_in_date_time
+    ),
+
+    CHECK (
+        check_out_date > check_in_date_time
+    ),
+
+    FOREIGN KEY (attendee_id)
+        REFERENCES attendee(attendee_id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (room_id)
+        REFERENCES hostel_room(room_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- VENDORS
+-- ----------------------------------------------------------------
+CREATE TABLE vendor (
+    vendor_id SERIAL PRIMARY KEY,
+
+    venue_id INT NOT NULL,
+
+    stall_name VARCHAR(100) NOT NULL,
+
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    email VARCHAR(255) UNIQUE NOT NULL,
+
+    service_type VARCHAR(20) NOT NULL
+        CHECK (
+            service_type IN (
+                'FOOD',
+                'BEVERAGES',
+                'MERCHANDISE',
+                'BOOKS',
+                'TECHNOLOGY',
+                'GAMES',
+                'OTHER'
+            )
+        ),
+
+    rent_per_day NUMERIC(12,2) NOT NULL
+        CHECK (rent_per_day >= 0),
+
+    FOREIGN KEY (venue_id)
+        REFERENCES venue(venue_id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE vendor_phone (
+    vendor_id INT NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+
+    PRIMARY KEY (vendor_id, phone),
+
+    FOREIGN KEY (vendor_id)
+        REFERENCES vendor(vendor_id)
+        ON DELETE CASCADE
+);
+
+
+-- ----------------------------------------------------------------
+-- LOST & FOUND
+-- ----------------------------------------------------------------
+CREATE TABLE lost_found (
+    item_id SERIAL PRIMARY KEY,
+
+    report_type VARCHAR(10) NOT NULL
+        CHECK (
+            report_type IN (
+                'LOST',
+                'FOUND'
+            )
+        ),
+
+    description TEXT NOT NULL,
+
+    phone VARCHAR(15) NOT NULL,
+
+    status VARCHAR(20) NOT NULL
+        CHECK (
+            status IN (
+                'OPEN',
+                'RESOLVED'
+            )
+        ),
+
+    venue_id INT NOT NULL,
+
+    FOREIGN KEY (venue_id)
+        REFERENCES venue(venue_id)
+        ON DELETE RESTRICT
+);
+
+
+-- ----------------------------------------------------------------
+-- FEEDBACK
+-- ----------------------------------------------------------------
+CREATE TABLE feedback (
+    feedback_id SERIAL PRIMARY KEY,
+
+    feedback TEXT NOT NULL,
+
+    reviewer_type VARCHAR(30) NOT NULL
+        CHECK (
+            reviewer_type IN (
+                'ATTENDEE',
+                'ARTIST',
+                'VENDOR',
+                'VOLUNTEER',
+                'JUDGE',
+                'COMMITTEE_MEMBER'
+            )
+        ),
+
+    rating INT NOT NULL
+        CHECK (
+            rating BETWEEN 1 AND 5
+        ),
+
+    feedback_date DATE NOT NULL
+        DEFAULT CURRENT_DATE
+);

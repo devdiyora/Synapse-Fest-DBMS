@@ -1,0 +1,137 @@
+ER DIAGRAM TO RELATIONAL SCHEMA TRANSFORMATION
+Synapse Fest Database
+
+================================================================
+OVERVIEW
+================================================================
+The Synapse Fest Database was initially modeled using an
+Entity-Relationship (ER) diagram representing the major entities,
+attributes, and relationships involved in managing a college festival.
+The ER diagram was then transformed into a relational schema by applying
+standard ER-to-Relational mapping rules.
+
+The objective was to convert conceptual entities and relationships into
+relations that can be implemented in PostgreSQL while preserving data
+integrity and minimizing redundancy.
+
+================================================================
+MAPPING RULES
+================================================================
+1. Every strong entity was converted into a relation with its primary
+   key.
+2. Multivalued attributes (e.g. phone numbers) were separated into
+   independent relations.
+3. One-to-Many (1:N) relationships were implemented using foreign keys
+   on the "many" side.
+4. Many-to-Many (M:N) relationships were converted into associative
+   relations containing the primary keys of the participating entities.
+5. Derived attributes were not stored; they are computed whenever
+   required.
+6. Integrity constraints were enforced through primary keys, foreign
+   keys, CHECK constraints, and triggers.
+
+================================================================
+1NF: MULTIVALUED ATTRIBUTES
+================================================================
+Several entities contained multivalued phone numbers in the ER model.
+To maintain First Normal Form (1NF), separate relations were created:
+
+  COMMITTEE_PHONE(comm_id, phone)
+  ATTENDEE_PHONE(attendee_id, phone)
+  ARTIST_PHONE(artist_id, phone)
+  JUDGES_PHONE(judge_id, phone)
+  VOLUNTEER_PHONE(volunteer_id, phone)
+  SPONSOR_PHONE(sponsor_id, phone)
+  VENDOR_PHONE(vendor_id, phone)
+
+Each relation uses a composite primary key consisting of the owner
+identifier and phone number.
+
+================================================================
+RELATIONSHIP MAPPING
+================================================================
+
+One-to-Many Relationships
+----------------------------------------------------------------
+Relationship                                Implementation
+----------------------------------------------------------------
+Committee manages Event                     EVENT.comm_id
+Venue hosts Event                           EVENT.venue_id
+Venue contains Vendor                       VENDOR.venue_id
+Venue associated with Lost & Found report   LOST_FOUND.venue_id
+Attendee purchases Ticket                   TICKET.attendee_id
+Ticket belongs to Ticket Type                TICKET.ticket_type_id
+
+Many-to-Many Relationships
+----------------------------------------------------------------
+Relationship                    Associative Relation
+----------------------------------------------------------------
+Event -- Judge                  EVENT_JUDGES
+Event -- Artist                 EVENT_ARTIST
+Ticket Type -- Event            TICKET_TYPE_EVENT
+Committee -- Sponsor            COMMITTEE_SPONSOR
+Committee -- Volunteer          COMMITTEE_VOLUNTEER
+Committee -- Committee Member   COMMITTEE_COMMITTEE_MEMBER
+Venue -- Facility               VENUE_FACILITY
+
+================================================================
+TABLES (pre-normalization, derived directly from the ER model)
+================================================================
+
+EVENT(event_id, event_name, category, rules, prize_money, date,
+      start_time, end_time, cost_event, venue_id, comm_id)
+
+JUDGES(judge_id, first_name, middle_name, last_name, email, fee, genre)
+JUDGES_PHONE(judge_id, phone)
+EVENT_JUDGES(event_id, judge_id)
+
+ARTIST(artist_id, first_name, middle_name, last_name, email, fee, genre)
+ARTIST_PHONE(artist_id, phone)
+EVENT_ARTIST(event_id, artist_id)
+
+VENUE(venue_id, venue_name, capacity, location)
+VENUE_FACILITY(venue_id, facility)
+
+COMMITTEE(comm_id, comm_name, email)
+COMMITTEE_PHONE(comm_id, phone)
+
+TICKET_TYPE(ticket_type_id, ticket_type_name, price)
+TICKET_TYPE_EVENT(ticket_type_id, event_id)
+TICKET(ticket_id, purchase_time, status, attendee_id, ticket_type_id)
+
+ATTENDEE(attendee_id, first_name, middle_name, last_name, gender,
+         category, email, dob)                 -- student, professor, etc.
+ATTENDEE_PHONE(attendee_id, phone)
+
+ACCOMMODATION(attendee_id, room_id, check_in_date_time, check_out_date,
+              number_of_guests, amount, status)
+HOSTEL_ROOM(room_id, hostel_name, capacity, status, rate_per_night)
+
+VENDOR(vendor_id, venue_id, stall_name, first_name, middle_name,
+       last_name, email, service_type, rent_per_day)
+VENDOR_PHONE(vendor_id, phone)
+
+LOST_FOUND(item_id, query(lost/found), description, status, venue_id)
+LOST_FOUND_PHONE(item_id, phone)
+
+BUDGET(budget_id, comm_id, amount, status)
+
+SPONSOR(sponsor_id, sponsor_name, email)
+COMMITTEE_SPONSOR(comm_id, sponsor_id, amount, status)
+SPONSOR_PHONE(sponsor_id, phone)
+
+COMMITTEE_MEMBER(member_id, first_name, middle_name, last_name, email,
+                  position, year_experience)
+COMMITTEE_MEMBER_PHONE(member_id, phone)
+COMMITTEE_COMMITTEE_MEMBER(comm_id, member_id)
+
+VOLUNTEER(volunteer_id, first_name, middle_name, last_name, email)
+VOLUNTEER_PHONE(volunteer_id, phone)
+COMMITTEE_VOLUNTEER(comm_id, volunteer_id)
+
+FEEDBACK(feedback_id, feedback, reviewer_type, rating (out of 5), date)
+
+Note: this list reflects the schema exactly as derived from the ER
+diagram, before normalization is applied. See Normalization.txt for the
+2NF/3NF/BCNF analysis and the final decomposed schema, and
+create_tables.txt for the implemented PostgreSQL DDL.

@@ -1,0 +1,189 @@
+SYNAPSE ANNUAL FEST DATABASE
+Software Requirements Specification (SRS)
+
+================================================================
+1. INTRODUCTION
+================================================================
+
+1.1 Purpose
+----------------------------------------------------------------
+Synapse is an annual fest of DA-IICT which includes thousands of attendees,
+various events, artists, accommodations, etc.
+
+It becomes difficult to keep track of data like:
+  - When and where will an event take place?
+  - How many people will be attending the event?
+  - Are there any more rooms available for accommodation, and how many?
+  - Which artist(s) will be present at a particular event, and what are
+    their contact details?
+  - What are the different types of tickets available (Platinum, Golden,
+    Silver -- varying number of events included), or tickets covering
+    only one particular event, and what is their availability?
+
+Hence it becomes essential to maintain a database for Synapse. It:
+  - Eliminates manual data handling.
+  - Provides real-time monitoring of event schedules, venues, and ticket
+    status.
+  - Enables rapid generation of reports for the Synapse committee.
+  - Avoids human errors from manual ticketing, which often leads to
+    mistakes.
+  - Supports quick updates -- last-minute changes in venues or timing
+    require rapid action, which cannot be reliably achieved manually.
+
+1.2 Intended Audience
+----------------------------------------------------------------
+The database will be accessed by Synapse committee members,
+administration, volunteers, and IT staff.
+
+  - Suppose the committee wants to arrange food, water, or beverages for
+    a particular event -- how much should they arrange? They can check
+    the number of tickets sold for that event to estimate audience size,
+    and use that to plan seating arrangements.
+  - Suppose an artist is running late for an event -- committee members
+    can quickly look up their contact details in the database and reach
+    out for updates.
+  - IT staff are tasked with system deployment, troubleshooting, and
+    ongoing maintenance. They need operational instructions, backup
+    plans, and support requirements.
+
+1.3 Product Scope
+----------------------------------------------------------------
+The system will provide the committee with tools to:
+  - Create and manage events (music, dance, drama, tech, art, formal
+    events, etc.)
+  - Manage venues and schedule events to avoid clashes.
+  - Register artists/performers and link them to events.
+  - Support multiple ticket types and pass models (single-event,
+    event-package, Platinum/Gold passes covering multiple or all
+    events).
+  - Record ticket sale details and buyer details.
+  - Manage attendee information and accommodation bookings.
+  - Maintain records for food vendors and sponsor details.
+  - Generate standard reports (tickets sold per event, revenue, artist
+    schedule, capacity utilization).
+
+Out of scope (for initial release):
+  - Full integration with a live payment gateway.
+  - A native mobile app.
+
+1.4 Description
+----------------------------------------------------------------
+Synapse is the flagship techno-cultural festival of DAU (Dhirubhai
+Ambani University), held annually in Gandhinagar, Gujarat. It spans four
+days, typically in February, bringing together technology, culture, arts,
+and entertainment.
+
+Synapse features an extensive lineup -- from pro-nights with celebrated
+artists to competitions across music, dance, drama, fashion, literature,
+photography, eSports, coding, and more, making it one of Gujarat's most
+prominent college fests.
+
+Highlights include pro-nights featuring renowned performers such as
+Salim-Sulaiman, Amit Trivedi, Antara Mitra, and DJ acts like Teri Miko,
+each drawing large crowds.
+
+The fest engages students, artists, technophiles, and cultural
+enthusiasts through experiences such as:
+  - "Battle of Bands", "Rampage" (fashion show), "Footloose" (contemporary
+    dance), "Stage Play", and "Cynosure" (main celebrity night)
+  - Tech challenges like "Tech Hunt", "Battledrome" (eSports), "Math-ify"
+  - Literary competitions such as "Shailee" (poetry & creative writing),
+    "Anweshan" (research papers), "Samwaad" (parliamentary debate)
+  - Creative zones like "CosCon" (cosplay), "Conceive" (photography)
+  - Genre-spanning showcases in traditional dance, mime, street play
+    ("Nukkad Natak"), and solo performances ("Mono Acte")
+
+Synapse is a student-owned endeavor, run by hundreds of volunteers and
+committee members across teams such as event management, hospitality,
+PR, design, sponsorship, finance, and web -- each coordinating tasks,
+publicity, sponsorship outreach, and infrastructure.
+
+This complex orchestration needs a robust backend system to manage
+events, artists, ticketing, vendors, accommodation, schedules, sponsors,
+and reporting.
+
+References: elections.daiict.ac.in, Knowafest, Unstop, Facebook
+
+
+================================================================
+2. FACT-FINDING AND REQUIREMENTS COLLECTION
+================================================================
+
+2.1 Background Reading
+----------------------------------------------------------------
+2.1.1 "Synapse is a celebration..." -- DA-IICT Annual Festival
+      Committee Page
+Source: Official description of Synapse on the DA-IICT committee site
+(DA-IICT Elections)
+
+What was learned:
+  - Synapse is the annual techno-cultural festival at DA-IICT, described
+    as "a celebration of culture, technology and life".
+  - It is organized entirely by student committee teams handling: Event
+    Management, Hospitality/Accommodation, Volunteers, Sponsorship,
+    Public Relations, Design, and Web Design.
+  - Sponsorships majorly fund the fest -- some budget is also allocated
+    to individual committees.
+
+2.2 Interviews
+----------------------------------------------------------------
+
+2.2.1 Interview 1
+Participants : Dev Diyora, Ashish Kumar, Harsh Shah
+Date         : 02/08/2025
+Place        : Cafeteria
+Time         : 16:00
+Duration     : 5 minutes
+Purpose      : To understand the responsibilities and work of a
+               Synapse committee member.
+
+  Interviewer (P1): How is work done as a committee?
+  Committee member (P2): Different members are assigned different work
+  in groups of varying size -- some sell/advertise tickets, some visit
+  other colleges for advertising Synapse, some handle room allotments,
+  etc.
+
+  P1: Do you face any challenges in it?
+  P2: Sometimes it's difficult to find out who is responsible for which
+  job.
+
+  P1: Any other challenges?
+  P2: During peak hours -- when a lot of tickets are being sold, or
+  many events/accommodations are being added -- the database sometimes
+  crashes.
+
+  Conclusions:
+    - A record of committee members is required, tracking who is
+      responsible for which job.
+    - The database must be able to handle load without crashing.
+
+2.2.2 Interview 2
+Participants : Dev Diyora, Ashish Kumar, Trisha
+Date         : 02/08/2025
+Place        : Cafeteria
+Time         : 20:00
+Duration     : 16 minutes
+Purpose      : To understand the responsibilities and work of a
+               Synapse committee member.
+
+  Interviewer (P1): You've worked in Synapse -- what can you tell me
+  about it?
+  Committee member (P2): There are many events in Synapse; I personally
+  worked on the quizzing event. It was theme-based, with a Harry Potter
+  theme. Gifts for winners were provided by sponsors. We planned two
+  levels of quizzes; in case of a tie between groups, we'd use the time
+  taken by each group to decide the winner. There are many such events
+  in Synapse.
+
+  P1: Do you remember any challenges you faced?
+  P2: Some members are stationed at the gate for registering on-spot
+  registrations. It gets hectic since a lot of people arrive on event
+  day.
+
+  Conclusions:
+    - Different events must not be mixed -- their information must be
+      stored separately.
+    - On-spot registrations can't be closed, since maximum participation
+      is encouraged; online registration should be encouraged as much
+      as possible.
+    - Different sponsors' data must also be stored.
