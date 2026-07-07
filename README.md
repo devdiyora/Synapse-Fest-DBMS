@@ -1,5 +1,5 @@
 SYNAPSE FEST – Festival Management Database System
-
+-------------------------------------------------------
 A PostgreSQL-based database system designed for managing a college
 techno-cultural festival. The project models various aspects of
 festival operations such as events, committees, attendees, tickets,
